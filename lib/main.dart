@@ -85,6 +85,7 @@ class _QuizPageState extends State<QuizPage> {
     showDialog(
       context: context,
       builder: (b) => alert,
+      barrierDismissible: false,
     );
   }
 
