@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quizzler/questionBank.dart';
 
 void main() => runApp(Quizzler());
 
@@ -25,6 +26,68 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  QuestionBank questionBank = QuestionBank();
+
+  void checkAnswer(bool userClick) {
+    if (questionBank.getCurrent().answer == userClick) {
+      questionBank.addCorrect();
+    } else {
+      questionBank.addIncorrect();
+    }
+    setState(() {
+      questionBank.next();
+    });
+    if (questionBank.completed) {
+      showAlertDialog(context);
+    }
+  }
+
+  Widget buildButton(bool userInput) {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.all(15.0),
+        child: MaterialButton(
+          textColor: Colors.white,
+          color: userInput ? Colors.green : Colors.red,
+          child: Text(
+            userInput ? 'True' : 'False',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.0,
+            ),
+          ),
+          onPressed: () {
+            checkAnswer(userInput);
+          },
+        ),
+      ),
+    );
+  }
+
+  showAlertDialog(BuildContext context) {
+    var score = questionBank.getScore();
+    AlertDialog alert = AlertDialog(
+      title: Text("Quizz completed!!!"),
+      content: Text("you have completed the quizz with score - $score"),
+      actions: [
+        TextButton(
+          child: Text("OK & Reset"),
+          onPressed: () {
+            setState(() {
+              questionBank.reset();
+            });
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    );
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (b) => alert,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,7 +100,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go.',
+                questionBank.getCurrent().question,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -47,51 +110,12 @@ class _QuizPageState extends State<QuizPage> {
             ),
           ),
         ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(15.0),
-            child: MaterialButton(
-              textColor: Colors.white,
-              color: Colors.green,
-              child: Text(
-                'True',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20.0,
-                ),
-              ),
-              onPressed: () {
-                //The user picked true.
-              },
-            ),
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: EdgeInsets.all(15.0),
-            child: MaterialButton(
-              color: Colors.red,
-              child: Text(
-                'False',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  color: Colors.white,
-                ),
-              ),
-              onPressed: () {
-                //The user picked false.
-              },
-            ),
-          ),
-        ),
-        //TODO: Add a Row here as your score keeper
+        buildButton(true),
+        buildButton(false),
+        Row(
+          children: questionBank.results,
+        )
       ],
     );
   }
 }
-
-/*
-question1: 'You can lead a cow down stairs but not up stairs.', false,
-question2: 'Approximately one quarter of human bones are in the feet.', true,
-question3: 'A slug\'s blood is green.', true,
-*/
